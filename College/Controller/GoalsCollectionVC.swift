@@ -9,16 +9,22 @@
 import UIKit
 import Firebase
 
-class GoalsCollectionVC: UICollectionViewController, UICollectionViewDelegateFlowLayout {
+class GoalsCollectionVC: UICollectionViewController {
     
     var ref: DatabaseReference!
     var user: User!
     var userID: String!
     var username: String!
     var goals: [GoalData] = []
+    let group = DispatchGroup()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let layout = collectionView?.collectionViewLayout as? GoalsFlowLayout {
+            layout.delegate = self
+        }
+        
         self.collectionView?.isUserInteractionEnabled = true
         // Set up database
         ref = Database.database().reference()
@@ -31,66 +37,124 @@ class GoalsCollectionVC: UICollectionViewController, UICollectionViewDelegateFlo
         //self.navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .stop, target: self, action: #selector(logout))
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addGoal))
         
-        getGoals()
+        //getGoals()
+        getAllGoals()
+        group.notify(queue: .main) {
+            self.collectionView.reloadData()
+        }
     }
 
-    // Only needed to be called once because a listener is called on the database
-    func getGoals() {
-        // This will be called whenever a child is added to the specific node in the Firebase database
-        self.ref.child("users").child(self.userID!).child("goals").observe(.childAdded, with: { (snapshot) in
-            let goalDesc = snapshot.key
-            // Storing name of goal under users
-            // Then storing all goal info in a different area of database
-            self.ref.child("goals").child(goalDesc).observeSingleEvent(of: .value, with: { (snapshot) in
-                let dict = snapshot.value as! NSDictionary
-                let goalType = dict["type"] as! String
-                let date = dict["date"] as! String
-                let freqCompleted = dict["freqCompleted"] as! String
-                let freqIncompleted = dict["freqIncompleted"] as! String
-                let goal = GoalData(goal: goalDesc, goalTitle: goalType, dateCreated: date, frequencyCompleted: Double(freqCompleted)!, frequencyIncompleted: Double(freqIncompleted)!)
-                goal.setPieChartEntries()
-                self.goals.append(goal)
-                
-                // Sorts the goals by descending order by DATE in goalData model
-                self.goals = self.goals.sorted(by: {
-                    $0.getFullDate().compare($1.getFullDate()) == .orderedDescending
-                })
-                self.collectionView?.reloadData()
-            })
+    func getAllGoals() {
+        group.enter()
+        self.ref.child("users").child(self.userID!).child("goals").observeSingleEvent(of: .value, with: { (snapshot1) in
+            if let goalDict = snapshot1.value as? NSDictionary {
+                for goal in goalDict.allKeys {
+                    if let goalString = goal as? String {
+                        self.group.enter()
+                        self.ref.child("goals").child(goalString).observeSingleEvent(of: .value, with: { (snapshot2) in
+                            let dict = snapshot2.value as! NSDictionary
+                            let goalType = dict["type"] as! String
+                            let date = dict["date"] as! String
+                            let freqCompleted = dict["freqCompleted"] as! String
+                            let freqIncompleted = dict["freqIncompleted"] as! String
+                            let goal = GoalData(goal: goalString, goalTitle: goalType, dateCreated: date, frequencyCompleted: Double(freqCompleted)!, frequencyIncompleted: Double(freqIncompleted)!)
+                            goal.setPieChartEntries()
+                            self.goals.append(goal)
+                            
+                            // Sorts the goals by descending order by DATE in goalData model
+                            self.goals = self.goals.sorted(by: {
+                                $0.getFullDate().compare($1.getFullDate()) == .orderedDescending
+                            })
+                            self.group.leave()
+                        })
+                    }
+                }
+                self.group.leave()
+            }
         })
-        
     }
-
+    
+    
+//    func getGoalsOfType(goalType: String) {
+//        group.enter()
+//        self.ref.child("users").child(self.userID!).child("goals").observeSingleEvent(of: .value, with: { (snapshot1) in
+//            if let goalDict = snapshot1.value as? NSDictionary {
+//                for goal in goalDict.allKeys {
+//                    if let goalString = goal as? String {
+//                        self.group.enter()
+//                        self.ref.child("goals").child(goalString).observeSingleEvent(of: .value, with: { (snapshot2) in
+//                            let dict = snapshot2.value as! NSDictionary
+//                            let goalTypeFromDict = dict["type"] as! String
+//                            if(goalTypeFromDict == goalType) {
+//                                let date = dict["date"] as! String
+//                                let freqCompleted = dict["freqCompleted"] as! String
+//                                let freqIncompleted = dict["freqIncompleted"] as! String
+//                                let goal = GoalData(goal: goalString, goalTitle: goalTypeFromDict, dateCreated: date, frequencyCompleted: Double(freqCompleted)!, frequencyIncompleted: Double(freqIncompleted)!)
+//                                goal.setPieChartEntries()
+//                                self.goals.append(goal)
+//
+//                                // Sorts the goals by descending order by DATE in goalData model
+//                                self.goals = self.goals.sorted(by: {
+//                                    $0.getFullDate().compare($1.getFullDate()) == .orderedDescending
+//                                })
+//                            }
+//                            self.group.leave()
+//                        })
+//                    }
+//                }
+//                self.group.leave()
+//            }
+//        })
+//    }
+    
     @objc func addGoal() {
         
-        let ac = UIAlertController(title: "Add a Goal", message: nil, preferredStyle: .alert)
-        ac.addTextField { (textField) in
-            textField.placeholder = "Type of Goal"
-        }
-        ac.addTextField { (textField) in
-            textField.placeholder = "Goal"
-        }
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        ac.addAction(UIAlertAction(title: "OK", style: .default) { [unowned self, ac] _ in
-            
-            // Default value is ""
-            let goalType = ac.textFields![0].text!
-            let goalDesc = ac.textFields![1].text!
-            // If one field isn't entered
-            if(goalType == "" || goalDesc == "") {
-                return
-            }
-            let date = Date()
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "MMM dd, yyyy HH:mm:ss"
-            let todaysDate = dateFormatter.string(from: date)
-            let goal = GoalData(goal: goalDesc, goalTitle: goalType, dateCreated: todaysDate, frequencyCompleted: 0, frequencyIncompleted: 0)
-            goal.setGoalData()
-            
-        })
+        let screen = UIScreen.main.bounds
+        let navBarHeight = navigationController?.navigationBar.bounds.height ?? 0
+        let viewBounds = self.view.bounds
+        let blurrEffect = UIBlurEffect(style: .extraLight)
+        let blurryView = UIVisualEffectView(effect: blurrEffect)
+        blurryView.frame = CGRect(x: 0, y: 0, width: viewBounds.width, height: viewBounds.height)
+        blurryView.tag = 100
+        blurryView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(blurryViewTapped)))
         
-        present(ac, animated: true)
+        let selectorView = GoalTypeChoiceView(frame: CGRect(x: screen.width-160-12+8, y: navBarHeight+72, width: 160, height: 160))
+        selectorView.delegate = self
+        selectorView.tag = 101
+        
+        let triangle = triangleView(frame: CGRect(x: screen.width-16-28, y: navBarHeight+48, width: 32, height: 24))
+        triangle.backgroundColor = UIColor.clear
+        triangle.tag = 102
+        
+        blurryView.alpha = 0.0
+        selectorView.alpha = 0.0
+        triangle.alpha = 0.0
+        self.view.addSubview(blurryView)
+        self.view.addSubview(selectorView)
+        self.view.addSubview(triangle)
 
+        UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseIn, animations: {
+            blurryView.alpha = 1.0
+            selectorView.alpha = 1.0
+            triangle.alpha = 1.0
+        })
+
+    }
+    
+    @objc func blurryViewTapped() {
+        removeAddGoalViews()
+    }
+    
+    func removeAddGoalViews() {
+        for index in 100...103 {
+            if let viewToRemove = self.view.viewWithTag(index) {
+                UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseIn, animations: {
+                    viewToRemove.alpha = 0
+                }) { _ in
+                    viewToRemove.removeFromSuperview()
+                }
+            }
+        }
     }
     
     @objc func logout() {
@@ -99,12 +163,7 @@ class GoalsCollectionVC: UICollectionViewController, UICollectionViewDelegateFlo
         } catch {
             print("error logging out")
         }
-        print()
         navigationController?.popToRootViewController(animated: true)
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: self.view.frame.width, height: self.view.frame.height/2)
     }
     
     // Used for when cell clicked
@@ -163,4 +222,86 @@ extension GoalsCollectionVC : DatesDelegate {
     func reloadCollectionView() {
         self.collectionView?.reloadData()
     }
+}
+
+extension GoalsCollectionVC: GoalsLayoutDelegate {
+    func collectionView(_ collectionView: UICollectionView,
+                        heightforPieChart indexPath:IndexPath) -> CGFloat {
+
+        return 300
+    }
+}
+
+extension GoalsCollectionVC : GoalTypeViewProtocol {
+    func buttonTapped(goalType: String) {
+        // When a goal type was tapped
+        
+        // Add place to enter goal description
+        let viewBounds = self.view.bounds
+        let goalViewWidth = (2*(viewBounds.width/3))
+        let goalViewHeight = (viewBounds.height/4)
+        let goalView = GoalDescriptionView(frame: CGRect(x: viewBounds.size.width/2 - goalViewWidth/2, y: viewBounds.size.height/2 - goalViewHeight/2, width: goalViewWidth, height: goalViewHeight))
+        goalView.delegate = self
+        goalView.goalTypeLabel.text = goalType
+        goalView.tag = 103
+        
+        goalView.alpha = 0.0
+        self.view.addSubview(goalView)
+        // Get rid of views and add the new view
+        if let viewWithTag1 = self.view.viewWithTag(101), let viewWithTag2 = self.view.viewWithTag(102) {
+            UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseIn, animations: {
+                viewWithTag1.alpha = 0.0
+                viewWithTag2.alpha = 0.0
+                goalView.alpha = 1.0
+            }) { _ in
+                viewWithTag1.removeFromSuperview()
+                viewWithTag2.removeFromSuperview()
+                
+            }
+        }
+        
+    }
+}
+
+extension GoalsCollectionVC : GoalDescriptionViewProtocol {
+    func doneButtonTapped(goalDescription: String, goalType: String) {
+        
+        // Get rid of views
+        if let viewWithTag1 = self.view.viewWithTag(100), let viewWithTag2 = self.view.viewWithTag(103) {
+            UIView.animate(withDuration: 1, delay: 0, options: .curveEaseIn, animations: {
+                viewWithTag1.alpha = 0
+                viewWithTag2.alpha = 0
+            }) { _ in
+                viewWithTag1.removeFromSuperview()
+                viewWithTag2.removeFromSuperview()
+            }
+        }
+        
+        // Create vars for a GoalData Entry
+        let date = Date()
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM dd, yyyy HH:mm:ss"
+        let todaysDate = dateFormatter.string(from: date)
+        let goal = GoalData(goal: goalDescription, goalTitle: goalType, dateCreated: todaysDate, frequencyCompleted: 0, frequencyIncompleted: 0)
+        // Set up for collection view
+        goal.setGoalData()
+        goal.setPieChartEntries()
+        
+        // Animate addition of new entry
+        self.goals.insert(goal, at: 0)
+        let indexPath = IndexPath(
+            item: 0,
+            section: 0
+        )
+        
+        self.collectionView?.performBatchUpdates({
+            self.collectionView?.insertItems(at: [indexPath])
+        }, completion: nil)
+        
+    }
+    
+    func cancelButtonTapped() {
+        removeAddGoalViews()
+    }
+    
 }

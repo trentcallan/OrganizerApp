@@ -13,11 +13,13 @@ class Recipe: NSObject {
     var title: String
     var ingredients: [String]
     var amount : [String]
+    var ingredientAndAmountDictionary: [String : Int]
     
     init(title: String, ingredients: [String], amount: [String]) {
         self.title = title
         self.ingredients = ingredients
         self.amount = amount
+        self.ingredientAndAmountDictionary = [:]
     }
 
 
