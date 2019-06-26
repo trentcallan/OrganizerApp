@@ -16,11 +16,13 @@ class GoalsCollectionVC: UICollectionViewController {
     var userID: String!
     var username: String!
     var goals: [GoalData] = []
+    var goalsWithType: [GoalWithType] = [GoalWithType(goals: [], goalType: "Daily", section: 0), GoalWithType(goals: [], goalType: "Weekly", section: 1), GoalWithType(goals: [], goalType: "Monthly", section: 2), GoalWithType(goals: [], goalType: "Yearly", section: 3)]
     let group = DispatchGroup()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        collectionView.register(GoalHeaderReusableView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "goalHeaderView")
         if let layout = collectionView?.collectionViewLayout as? GoalsFlowLayout {
             layout.delegate = self
         }
@@ -57,14 +59,23 @@ class GoalsCollectionVC: UICollectionViewController {
                             let date = dict["date"] as! String
                             let freqCompleted = dict["freqCompleted"] as! String
                             let freqIncompleted = dict["freqIncompleted"] as! String
-                            let goal = GoalData(goal: goalString, goalTitle: goalType, dateCreated: date, frequencyCompleted: Double(freqCompleted)!, frequencyIncompleted: Double(freqIncompleted)!)
-                            goal.setPieChartEntries()
-                            self.goals.append(goal)
                             
-                            // Sorts the goals by descending order by DATE in goalData model
-                            self.goals = self.goals.sorted(by: {
+                            let fullDate = date.fullDate ?? Date()
+                            let section = goalType.goalTypeSection
+                            let goal = GoalData(goal: goalString, goalTitle: goalType, dateCreated: fullDate, dateCreatedString: date, frequencyCompleted: Double(freqCompleted)!, frequencyIncompleted: Double(freqIncompleted)!)
+                            goal.setPieChartEntries()
+                            
+                            
+                            self.goalsWithType[section].goals.append(goal)
+                            //self.goals.append(goal)
+                            
+                            self.goalsWithType[section].goals = self.goalsWithType[section].goals.sorted(by: {
                                 $0.getFullDate().compare($1.getFullDate()) == .orderedDescending
                             })
+                            // Sorts the goals by descending order by DATE in goalData model
+                            /*self.goals = self.goals.sorted(by: {
+                                $0.getFullDate().compare($1.getFullDate()) == .orderedDescending
+                            })*/
                             self.group.leave()
                         })
                     }
@@ -73,39 +84,6 @@ class GoalsCollectionVC: UICollectionViewController {
             }
         })
     }
-    
-    
-//    func getGoalsOfType(goalType: String) {
-//        group.enter()
-//        self.ref.child("users").child(self.userID!).child("goals").observeSingleEvent(of: .value, with: { (snapshot1) in
-//            if let goalDict = snapshot1.value as? NSDictionary {
-//                for goal in goalDict.allKeys {
-//                    if let goalString = goal as? String {
-//                        self.group.enter()
-//                        self.ref.child("goals").child(goalString).observeSingleEvent(of: .value, with: { (snapshot2) in
-//                            let dict = snapshot2.value as! NSDictionary
-//                            let goalTypeFromDict = dict["type"] as! String
-//                            if(goalTypeFromDict == goalType) {
-//                                let date = dict["date"] as! String
-//                                let freqCompleted = dict["freqCompleted"] as! String
-//                                let freqIncompleted = dict["freqIncompleted"] as! String
-//                                let goal = GoalData(goal: goalString, goalTitle: goalTypeFromDict, dateCreated: date, frequencyCompleted: Double(freqCompleted)!, frequencyIncompleted: Double(freqIncompleted)!)
-//                                goal.setPieChartEntries()
-//                                self.goals.append(goal)
-//
-//                                // Sorts the goals by descending order by DATE in goalData model
-//                                self.goals = self.goals.sorted(by: {
-//                                    $0.getFullDate().compare($1.getFullDate()) == .orderedDescending
-//                                })
-//                            }
-//                            self.group.leave()
-//                        })
-//                    }
-//                }
-//                self.group.leave()
-//            }
-//        })
-//    }
     
     @objc func addGoal() {
         
@@ -186,34 +164,44 @@ class GoalsCollectionVC: UICollectionViewController {
     }
 
     override func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return 1
+        return goalsWithType.count
     }
 
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return goals.count
+        return goalsWithType[section].goals.count
     }
 
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "chartCell", for: indexPath) as! GoalViewCell
-        let goal = goals[indexPath.row]
+        let goalSection = goalsWithType[indexPath.section]
+        let goal = goalSection.goals[indexPath.row]
+        
+        //let goal = goals[indexPath.row]
         cell.goalDescription.text = goal.goal
         cell.goalType.text = "\(goal.goalTitle) goal for \(username ?? "")"
-        cell.setUpPieChart(chartData: goals[indexPath.row].pieChartData)
+        cell.setUpPieChart(chartData: goal.pieChartData)
         cell.pieChart.chartDescription?.text = "Start Date: \(goal.getFormattedDateString())"
         cell.pieChart.centerText = goal.goalTitle
         return cell
     }
 
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let goal = goals[indexPath.row]
+        let goal = goalsWithType[indexPath.section].goals[indexPath.row]
         let vc = self.storyboard?.instantiateViewController(withIdentifier: "dates") as! DatesCollectionVC
         // Set the goal and get the dates before pushing new view controller
         vc.goal = goal
+        vc.calendar = CalendarModel(date: goal.getFullDate())
         vc.getDates()
         vc.datesDelegate = self
         self.navigationController?.pushViewController(vc, animated: true)
     }
     
+    // Header for section
+    override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "goalHeaderView", for: indexPath) as! GoalHeaderReusableView
+        headerView.label.text = goalsWithType[indexPath.section].goalType + " Goals"
+        return headerView
+    }
 
 }
 
@@ -226,9 +214,14 @@ extension GoalsCollectionVC : DatesDelegate {
 
 extension GoalsCollectionVC: GoalsLayoutDelegate {
     func collectionView(_ collectionView: UICollectionView,
-                        heightforPieChart indexPath:IndexPath) -> CGFloat {
-
-        return 300
+                        goalDesc indexPath:IndexPath) -> String {
+        let goalText = goalsWithType[indexPath.section].goals[indexPath.row].goal
+        return goalText
+    }
+    func collectionView(_ collectionView: UICollectionView,
+                        goalTitle indexPath:IndexPath) -> String {
+        let goalTitle = goalsWithType[indexPath.section].goals[indexPath.row].goalTitle
+        return goalTitle
     }
 }
 
@@ -277,21 +270,27 @@ extension GoalsCollectionVC : GoalDescriptionViewProtocol {
             }
         }
         
+        // If user didn't enter description don't create goal
+        if(goalDescription == "") {
+            return
+        }
+        
         // Create vars for a GoalData Entry
         let date = Date()
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM dd, yyyy HH:mm:ss"
         let todaysDate = dateFormatter.string(from: date)
-        let goal = GoalData(goal: goalDescription, goalTitle: goalType, dateCreated: todaysDate, frequencyCompleted: 0, frequencyIncompleted: 0)
+        let goal = GoalData(goal: goalDescription, goalTitle: goalType, dateCreated: date, dateCreatedString: todaysDate, frequencyCompleted: 0, frequencyIncompleted: 1)
+        let section = goalType.goalTypeSection
         // Set up for collection view
         goal.setGoalData()
         goal.setPieChartEntries()
         
         // Animate addition of new entry
-        self.goals.insert(goal, at: 0)
+        self.goalsWithType[section].goals.insert(goal, at: 0)
         let indexPath = IndexPath(
             item: 0,
-            section: 0
+            section: section
         )
         
         self.collectionView?.performBatchUpdates({
@@ -305,3 +304,4 @@ extension GoalsCollectionVC : GoalDescriptionViewProtocol {
     }
     
 }
+

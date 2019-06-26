@@ -31,6 +31,9 @@
 		F544B50B22B81FAC00A398B1 /* GoalTypeChoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F544B50A22B81FAC00A398B1 /* GoalTypeChoiceView.swift */; };
 		F544B50D22B8291700A398B1 /* triangleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F544B50C22B8291700A398B1 /* triangleView.swift */; };
 		F544B50F22B97BA000A398B1 /* GoalDescriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F544B50E22B97BA000A398B1 /* GoalDescriptionView.swift */; };
+		F544B51122B9B51500A398B1 /* GoalWithType.swift in Sources */ = {isa = PBXBuildFile; fileRef = F544B51022B9B51500A398B1 /* GoalWithType.swift */; };
+		F544B51322B9C3BE00A398B1 /* GoalHeaderReusableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F544B51222B9C3BE00A398B1 /* GoalHeaderReusableView.swift */; };
+		F544B51722C2F83300A398B1 /* Day.swift in Sources */ = {isa = PBXBuildFile; fileRef = F544B51622C2F83300A398B1 /* Day.swift */; };
 		F590D7C52181968B00DDB68E /* GoalsCollectionVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = F590D7C42181968B00DDB68E /* GoalsCollectionVC.swift */; };
 		F590D7C72181970800DDB68E /* GoalViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F590D7C62181970800DDB68E /* GoalViewCell.swift */; };
 		F590D7CB21838AF400DDB68E /* GoalData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F590D7CA21838AF400DDB68E /* GoalData.swift */; };
@@ -70,6 +73,9 @@
 		F544B50A22B81FAC00A398B1 /* GoalTypeChoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalTypeChoiceView.swift; sourceTree = "<group>"; };
 		F544B50C22B8291700A398B1 /* triangleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = triangleView.swift; sourceTree = "<group>"; };
 		F544B50E22B97BA000A398B1 /* GoalDescriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalDescriptionView.swift; sourceTree = "<group>"; };
+		F544B51022B9B51500A398B1 /* GoalWithType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalWithType.swift; sourceTree = "<group>"; };
+		F544B51222B9C3BE00A398B1 /* GoalHeaderReusableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalHeaderReusableView.swift; sourceTree = "<group>"; };
+		F544B51622C2F83300A398B1 /* Day.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Day.swift; sourceTree = "<group>"; };
 		F590D7C42181968B00DDB68E /* GoalsCollectionVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsCollectionVC.swift; sourceTree = "<group>"; };
 		F590D7C62181970800DDB68E /* GoalViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalViewCell.swift; sourceTree = "<group>"; };
 		F590D7CA21838AF400DDB68E /* GoalData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalData.swift; sourceTree = "<group>"; };
@@ -152,7 +158,9 @@
 				F590D7CA21838AF400DDB68E /* GoalData.swift */,
 				F544B4DA22A9D09200A398B1 /* CalendarModel.swift */,
 				F544B4DC22AACBF200A398B1 /* Month.swift */,
+				F544B51622C2F83300A398B1 /* Day.swift */,
 				F544B4E422B03E2A00A398B1 /* ToDoModel.swift */,
+				F544B51022B9B51500A398B1 /* GoalWithType.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -170,6 +178,7 @@
 				F544B50A22B81FAC00A398B1 /* GoalTypeChoiceView.swift */,
 				F544B50E22B97BA000A398B1 /* GoalDescriptionView.swift */,
 				F544B50C22B8291700A398B1 /* triangleView.swift */,
+				F544B51222B9C3BE00A398B1 /* GoalHeaderReusableView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -313,6 +322,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F544B51322B9C3BE00A398B1 /* GoalHeaderReusableView.swift in Sources */,
 				F51D2CBE1FA6388900CE61B8 /* ToDoTVC.swift in Sources */,
 				F544B4E522B03E2A00A398B1 /* ToDoModel.swift in Sources */,
 				F544B50D22B8291700A398B1 /* triangleView.swift in Sources */,
@@ -320,6 +330,7 @@
 				F544B50B22B81FAC00A398B1 /* GoalTypeChoiceView.swift in Sources */,
 				F5F06EDD2123DBAC004BA761 /* LoginVC.swift in Sources */,
 				F544B4D922A9962900A398B1 /* TabBarController.swift in Sources */,
+				F544B51722C2F83300A398B1 /* Day.swift in Sources */,
 				F51D2CBF1FA6388900CE61B8 /* GroceryCell.swift in Sources */,
 				F51D2CBA1FA6388900CE61B8 /* GroceryListTVC.swift in Sources */,
 				F51D2CB81FA6388900CE61B8 /* toDoCell.swift in Sources */,
@@ -335,6 +346,7 @@
 				F590D7CB21838AF400DDB68E /* GoalData.swift in Sources */,
 				F5F06EDF2123E1EB004BA761 /* EmailSignUpVC.swift in Sources */,
 				F51D2CB71FA6388900CE61B8 /* GroceryItem.swift in Sources */,
+				F544B51122B9B51500A398B1 /* GoalWithType.swift in Sources */,
 				F544B4E722B2025400A398B1 /* GoalsFlowLayout.swift in Sources */,
 				F544B4E122AADFB500A398B1 /* MonthHeaderCollectionView.swift in Sources */,
 				F544B50F22B97BA000A398B1 /* GoalDescriptionView.swift in Sources */,

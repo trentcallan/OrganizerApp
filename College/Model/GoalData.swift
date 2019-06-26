@@ -14,7 +14,8 @@ class GoalData: NSObject {
 
     var goal: String
     var goalTitle: String
-    var dateCreated: String
+    var dateCreatedString: String
+    var dateCreated: Date
     var frequencyCompleted: Double = 0
     var frequencyIncompleted: Double = 0
     var pieChartData = PieChartData()
@@ -23,12 +24,13 @@ class GoalData: NSObject {
     var goalRef: DatabaseReference!
     var userID: String!
     
-    init(goal: String, goalTitle: String, dateCreated: String, frequencyCompleted: Double, frequencyIncompleted: Double) {
+    init(goal: String, goalTitle: String, dateCreated: Date, dateCreatedString: String, frequencyCompleted: Double, frequencyIncompleted: Double) {
         self.goal = goal
         self.goalTitle = goalTitle
         self.frequencyCompleted = frequencyCompleted
         self.frequencyIncompleted = frequencyIncompleted
         self.dateCreated = dateCreated
+        self.dateCreatedString = dateCreatedString
         
         ref = Database.database().reference()
         goalRef = ref.child("goals").child(goal)
@@ -40,7 +42,7 @@ class GoalData: NSObject {
         let date: Date
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM dd, yyyy HH:mm:ss"
-        if let tempDate = dateFormatter.date(from: dateCreated) {
+        if let tempDate = dateFormatter.date(from: dateCreatedString) {
             date = tempDate
         } else {
             date = Date()
@@ -57,7 +59,7 @@ class GoalData: NSObject {
         if let tempDate = dateFormatter.string(for: date) {
             dateString = tempDate
         } else {
-            dateString = dateCreated
+            dateString = dateCreatedString
         }
         return dateString
     }
@@ -80,12 +82,12 @@ class GoalData: NSObject {
     func setGoalData() {
         ref.child("users").child(userID!).child("goals").child(goal).setValue(true)
         goalRef.child("type").setValue(goalTitle)
-        goalRef.child("date").setValue(dateCreated)
+        goalRef.child("date").setValue(dateCreatedString)
         goalRef.child("freqCompleted").setValue("\(frequencyCompleted)")
         goalRef.child("freqIncompleted").setValue("\(frequencyIncompleted)")
         goalRef.child("datesCompleted").setValue(true)
         goalRef.child("datesIncompleted").setValue(true)
-        goalRef.child("dates").child(dateCreated).setValue(false)
+        goalRef.child("dates").child(dateCreated.fullDay).setValue(false)
     }
     
     func setFreqeuncies(completed: Double, incompleted: Double) {

@@ -30,6 +30,14 @@ extension Date {
     
 }
 
+extension String {
+    var fullDate: Date? {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM dd, yyyy HH:MM:SS"
+        return dateFormatter.date(from: self)
+    }
+}
+
 extension UIStackView {
     func addBackground(color: UIColor) {
         let subView = UIView(frame: bounds)
@@ -37,4 +45,24 @@ extension UIStackView {
         subView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         insertSubview(subView, at: 0)
     }
+}
+
+extension String {
+    var goalTypeSection: Int {
+        var numToReturn: Int
+        switch self {
+        case "Daily":
+            numToReturn = 0
+        case "Weekly":
+            numToReturn = 1
+        case "Monthly":
+            numToReturn = 2
+        case "Yearly":
+            numToReturn = 3
+        default:
+            numToReturn = 0
+        }
+        return numToReturn
+    }
+    
 }

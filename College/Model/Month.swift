@@ -11,13 +11,15 @@ import Foundation
 class Month: NSObject {
     
     var name: String
-    var days: [String]
-    var fullDays: [String]
+    var days: [Day]
     
-    init(name: String, days: [String], fullDays: [String]) {
+    init(name: String) {
         self.name = name
-        self.days = days
-        self.fullDays = fullDays
+        self.days = []
+    }
+    
+    func addDay(day: Day) {
+        days.append(day)
     }
     
 }

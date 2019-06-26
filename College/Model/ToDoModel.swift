@@ -20,8 +20,4 @@ class ToDoModel: NSObject {
         self.priority = priority
     }
     
-    /*func getStringOfPriority() -> String {
-        return String(priority)
-    }*/
-    
 }

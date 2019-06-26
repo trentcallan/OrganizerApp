@@ -15,6 +15,7 @@ class CalendarModel: NSObject {
     var dateString: String
     var dates: [String]
     var months: [Month]
+    var countOfDays: Int = 0
     
     init(date: Date) {
         self.date = date
@@ -24,41 +25,39 @@ class CalendarModel: NSObject {
         self.dateString = dateFormatted
         self.dates = []
         self.months = []
+        
+        super.init()
+        let currentDate = Date()
+        addDaysAndMonths(startDate: date, currentDate: currentDate)
+
     }
     
-    func getArrayOfDateStrings() -> [String] {
-        var daysStringArray: [String] = []
-        var startDate = date
-        let currentDate = Date()
-        let format = DateFormatter()
-        format.dateFormat = "MMM dd, yyyy"
-        var tempMonths = [Month]()
-        var days = [String]()
-        var fullDays = [String]()
-        var currentMonth = startDate.month
-        
-        while startDate.compare(currentDate) == .orderedAscending {
-            let currentDay = Calendar.current.isDate(currentDate, inSameDayAs: startDate)
-            if(startDate.month != currentMonth || currentDay) {
-                if(currentDay) {
-                    days.append(startDate.day)
-                    fullDays.append(startDate.fullDay)
-                }
-                tempMonths.append(Month(name: currentMonth, days: days, fullDays: fullDays))
-                currentMonth = startDate.month
-                days.removeAll()
-                fullDays.removeAll()
+    func addDaysAndMonths(startDate: Date, currentDate: Date) {
+        let calendar = Calendar(identifier: .gregorian)
+        let dayComponents = calendar.dateComponents(Set([.day]), from: startDate, to: currentDate)
+        let monthComponents = calendar.dateComponents(Set([.month]), from: startDate, to: currentDate)
+
+        for i in 0 ... monthComponents.month! {
+            guard let monthDate = calendar.date(byAdding: .month, value: i, to: startDate) else {
+                continue
             }
-            days.append(startDate.day)
-            fullDays.append(startDate.fullDay)
-            let dateFormatted = format.string(from: startDate)
-            daysStringArray.append(dateFormatted)
-            if let nextDate = Calendar.current.date(byAdding: .day, value: 1, to: startDate) {
-                startDate = nextDate
+            let month = Month(name: monthDate.month)
+            months.append(month)
+            
+            var numOfDays = dayComponents.day ?? 0
+            if(numOfDays != 0) {
+                numOfDays += 1
+            }
+            for j in 0 ... numOfDays {
+                guard let date = calendar.date(byAdding: .day, value: j, to: startDate) else {
+                    continue
+                }
+                let day = Day(date: date, dateString: date.day)
+                months[i].addDay(day: day)
+                countOfDays += 1
             }
         }
-        self.months = tempMonths
-        return daysStringArray
+
     }
     
 }

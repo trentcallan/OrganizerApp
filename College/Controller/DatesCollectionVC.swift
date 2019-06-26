@@ -17,17 +17,18 @@ class DatesCollectionVC: UICollectionViewController, UICollectionViewDelegateFlo
     
     var goal: GoalData!
     var datesDictionary: [String : Bool] = [:]
-    var dates: [String] = []
     let format = DateFormatter()
     let ref = Database.database().reference()
     let userID = Auth.auth().currentUser?.uid
     var datesDelegate: DatesDelegate?
-    var calendar: CalendarModel!
+    var calendar: CalendarModel! {
+        didSet {
+            populateDatesDictionary()
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        calendar = CalendarModel(date: goal.getFullDate())
-        dates = (calendar?.getArrayOfDateStrings())!
         
         format.dateFormat = "MMM dd, yyyy"
         
@@ -36,28 +37,46 @@ class DatesCollectionVC: UICollectionViewController, UICollectionViewDelegateFlo
         let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(done))
         self.navigationItem.rightBarButtonItem = doneButton
 
+        // When the database call to get dates is done the main thread will update the collection view
+        getDatesGroup.notify(queue: .main) {
+            self.collectionView.reloadData()
+        }
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // Called when the back button is clicked
+        if self.isMovingFromParent {
+            done()
+        }
+    }
+    
+    func populateDatesDictionary() {
+        for month in calendar.months {
+            for day in month.days {
+                datesDictionary[day.date.fullDay] = false
+            }
+        }
+    }
+    
+    let getDatesGroup = DispatchGroup()
     // Sets up the datesDictionary with values from database
     func getDates() {
         // Single time event call
         let goalref = ref.child("goals").child(goal.goal)
+        getDatesGroup.enter()
         goalref.child("dates").observeSingleEvent(of: .value, with: { (snapshot) in
             if let dict = snapshot.value as? NSDictionary {
                 let dateStrings = dict.allKeys as! [String]
                 let completionBoolean = dict.allValues as! [Bool]
                 for i in 0...dateStrings.count-1 {
-                    let dateString = dateStrings[i]
-                    let completion = completionBoolean[i]
-                    self.datesDictionary[dateString] = completion
-                }
-                if(self.dates.count > dateStrings.count) {
-                    for index in dateStrings.count...self.dates.count-1 {
-                        self.datesDictionary[self.dates[index]] = false
+                    if(completionBoolean[i]) {
+                        let dateString = dateStrings[i]
+                        self.datesDictionary[dateString] = true
                     }
                 }
-                self.collectionView?.reloadData()
             }
+            self.getDatesGroup.leave()
         })
     }
 
@@ -65,14 +84,17 @@ class DatesCollectionVC: UICollectionViewController, UICollectionViewDelegateFlo
     @objc func done() {
         var freqCompleted: Double = 0
         var freqIncompleted: Double = 0
-        for date in dates {
-            if let completion = datesDictionary[date] {
-                completion ? (freqCompleted+=1) : (freqIncompleted+=1)
-                ref.child("goals").child(goal.goal).child("dates").child(date).setValue(completion)
+        for month in calendar.months {
+            for day in month.days {
+                let date = day.date.fullDay
+                if let completion = datesDictionary[date] {
+                    completion ? (freqCompleted+=1) : (freqIncompleted+=1)
+                    ref.child("goals").child(goal.goal).child("dates").child(date).setValue(completion)
+                }
             }
         }
         goal.setFreqeuncies(completed: freqCompleted, incompleted: freqIncompleted)
-        // Reload the views in previous controller so frequencies with update with the graphs
+        // Reload the views in previous controller so frequencies will update with the graphs
         datesDelegate?.reloadCollectionView()
         self.navigationController?.popViewController(animated: true)
     }
@@ -109,8 +131,9 @@ class DatesCollectionVC: UICollectionViewController, UICollectionViewDelegateFlo
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "dateCell", for: indexPath) as! dateCell
         let month = calendar.months[indexPath.section]
         let day = month.days[indexPath.row]
-        cell.date.text = day
-        let date = month.fullDays[indexPath.row]
+        let dateString = day.dateString
+        cell.date.text = dateString
+        let date = day.date.fullDay
         // Set colors for days completed or not
         if let completion = datesDictionary[date] {
             if(completion) {
@@ -126,18 +149,18 @@ class DatesCollectionVC: UICollectionViewController, UICollectionViewDelegateFlo
     }
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        if let cell = collectionView.cellForItem(at: indexPath) as? dateCell {
-            let month = calendar.months[indexPath.section]
-            let date = month.fullDays[indexPath.row]
-            setCellBackgroundAndUpdateDictionary(cell: cell, date: date)
-
-        }
+        didTouchItemAt(indexPath: indexPath)
     }
     
     override func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+        didTouchItemAt(indexPath: indexPath)
+    }
+    
+    // When the cell is touch (selected or deselected)
+    func didTouchItemAt(indexPath: IndexPath) {
         if let cell = collectionView.cellForItem(at: indexPath) as? dateCell {
             let month = calendar.months[indexPath.section]
-            let date = month.fullDays[indexPath.row]
+            let date = month.days[indexPath.row].date.fullDay
             setCellBackgroundAndUpdateDictionary(cell: cell, date: date)
         }
     }

@@ -186,32 +186,34 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Q6b-0s-fp4">
-                                            <rect key="frame" x="0.0" y="29.5" width="42" height="20.5"/>
+                                            <rect key="frame" x="0.0" y="220.5" width="42" height="20.5"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                             <nil key="textColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="01p-OO-ev3">
-                                            <rect key="frame" x="0.0" y="9" width="50" height="20.5"/>
+                                            <rect key="frame" x="0.0" y="200" width="50" height="20.5"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                             <nil key="textColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                         <view contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="cK7-G6-JO1" customClass="PieChartView" customModule="Charts">
-                                            <rect key="frame" x="0.0" y="0.0" width="50" height="9"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="50" height="200"/>
                                             <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="200" id="BXN-2s-N3d"/>
+                                            </constraints>
                                         </view>
                                     </subviews>
                                 </view>
                                 <constraints>
-                                    <constraint firstAttribute="bottom" secondItem="Q6b-0s-fp4" secondAttribute="bottom" id="1FE-nm-34r"/>
+                                    <constraint firstItem="01p-OO-ev3" firstAttribute="top" secondItem="cK7-G6-JO1" secondAttribute="bottom" id="1Ie-bV-Uvb"/>
                                     <constraint firstItem="01p-OO-ev3" firstAttribute="leading" secondItem="Pvo-rG-4vf" secondAttribute="leading" id="4sm-QG-wHY"/>
                                     <constraint firstAttribute="trailing" secondItem="cK7-G6-JO1" secondAttribute="trailing" id="5vm-sn-dBB"/>
                                     <constraint firstItem="cK7-G6-JO1" firstAttribute="leading" secondItem="Pvo-rG-4vf" secondAttribute="leading" id="ILU-oO-LTX"/>
                                     <constraint firstItem="cK7-G6-JO1" firstAttribute="top" secondItem="Pvo-rG-4vf" secondAttribute="top" id="QNi-FC-iZZ"/>
                                     <constraint firstItem="Q6b-0s-fp4" firstAttribute="leading" secondItem="Pvo-rG-4vf" secondAttribute="leading" id="X2C-va-fzj"/>
                                     <constraint firstItem="Q6b-0s-fp4" firstAttribute="top" secondItem="01p-OO-ev3" secondAttribute="bottom" id="azH-Av-NEG"/>
-                                    <constraint firstItem="01p-OO-ev3" firstAttribute="top" secondItem="cK7-G6-JO1" secondAttribute="bottom" id="bcK-zD-nNe"/>
                                     <constraint firstAttribute="trailing" secondItem="01p-OO-ev3" secondAttribute="trailing" id="wZj-tv-sw3"/>
                                     <constraint firstAttribute="trailingMargin" secondItem="Q6b-0s-fp4" secondAttribute="trailing" id="yvy-Lp-xya"/>
                                 </constraints>

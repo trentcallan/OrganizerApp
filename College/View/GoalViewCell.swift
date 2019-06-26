@@ -54,6 +54,20 @@ class GoalViewCell: UICollectionViewCell {
     func setUpPieChart(chartData: PieChartData) {
         pieChart.data = chartData
     }
+    var isHeightCalculated = false
     
+    override func preferredLayoutAttributesFitting(_ layoutAttributes: UICollectionViewLayoutAttributes) -> UICollectionViewLayoutAttributes {
+        //Exhibit A - We need to cache our calculation to prevent a crash.
+        if !isHeightCalculated {
+            setNeedsLayout()
+            layoutIfNeeded()
+            let size = contentView.systemLayoutSizeFitting(layoutAttributes.size)
+            var newFrame = layoutAttributes.frame
+            newFrame.size.height = CGFloat(ceilf(Float(size.height)))
+            layoutAttributes.frame = newFrame
+            isHeightCalculated = true
+        }
+        return layoutAttributes
+    }
     
 }
